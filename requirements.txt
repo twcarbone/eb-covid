@@ -1,2 +1,5 @@
 beautifulsoup4==4.12.2
+greenlet==2.0.2
 soupsieve==2.4.1
+SQLAlchemy==2.0.9
+typing_extensions==4.5.0
