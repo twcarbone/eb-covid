@@ -82,6 +82,14 @@ def parse_case(text, post_day):
     }
 
 
+def get_soup():
+    logging.info("Getting HTML...")
+    page = requests.get(url="https://eblanding.com/covid-19-case-report-summary/")
+    soup = bs4.BeautifulSoup(page.content, "html.parser")
+    logging.info("Done.")
+    return soup
+
+
 def parse_html(args) -> list[dict]:
     """
     Parse HTML from https://eblanding.com/covid-19-case-report-summary/.
@@ -99,11 +107,7 @@ def parse_html(args) -> list[dict]:
     }
     ```
     """
-    logging.info("Getting HTML...")
-    page = requests.get(url="https://eblanding.com/covid-19-case-report-summary/")
-    soup = bs4.BeautifulSoup(page.content, "html.parser")
-    logging.info("Done.")
-
+    soup = get_soup()
     cases = []
 
     # Each <pre> or <p> tag denotes a new day of case reporting
