@@ -14,24 +14,23 @@ def parse_args():
     parser.add_argument(
         "-v",
         "--verbosity",
-        help="Set logging verbosity X (0, 1, 2)",
+        help="Set logging level X (10=DEBUG, 20=INFO, 30=WARNING, 40=ERROR, 50=CRITICAL). Defaults to 20 (INFO).",
         metavar="X",
         type=int,
         dest="verbosity",
-        default=1,
+        default=20,
     )
 
     return parser.parse_args()
 
 
-def logging_setup(verbosity):
-    mapping = {0: logging.FATAL, 1: logging.INFO, 2: logging.DEBUG}
+def logging_setup(level):
     logging.getLogger(__name__)
     logging.basicConfig(
         format="[%(asctime)s - %(levelname)s] %(message)s",
         # datefmt="%d/%b/%Y %H:%M:%S",
         datefmt="%c",
-        level=mapping.get(verbosity, logging.INFO),
+        level=level,
         force=True,
     )
 
