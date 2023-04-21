@@ -75,7 +75,7 @@ def parse_html(args) -> list[dict]:
     p = soup.find("article").find("div").find_all("p")
 
     for item in pre + p:
-        post_day = dt.strptime(item.get_text()[10:-1], "%B %d, %Y").date()
+        post_day = dt.datetime.strptime(item.get_text()[10:-1], "%B %d, %Y").date()
 
         # Each case reported on the given day is contained in an <li> tag
         for li in item.next_sibling.next_sibling.find_all("li"):
