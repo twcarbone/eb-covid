@@ -53,7 +53,7 @@ def grep_date(regex, s, item, year) -> dt.date:
     if m is None:
         logging.warning(f"Failed to resolve {item} from '{s}'")
         return None
-    
+
     groupdict = m.groupdict()
     month = groupdict.get("month")
     day = groupdict.get("day")
@@ -68,6 +68,18 @@ def grep_num(regex, s, item) -> int:
         return None
 
     return int(num.replace(",", ""))
+
+
+def parse_case(text, post_day):
+    return {
+        "id": grep_num("^#(.+):.*$", text, "num"),
+        "facility": grep(": Employee from (.+) facility", text, "facility"),
+        "dept": grep("Dept. (\w+),", text, "dept"),
+        "bldg": grep("Bldg. (.+),", text, "bldg"),
+        "post_day": post_day,
+        "last_day": grep_date("last day of work on {} and tested", text, "last_day", post_day.year),
+        "test_day": grep_date("tested on {}\.?", text, "test_day", post_day.year),
+    }
 
 
 def parse_html(args) -> list[dict]:
@@ -116,17 +128,7 @@ def parse_html(args) -> list[dict]:
                 logging.warning(f"No case data for '{li.get_text()}'")
                 continue
 
-            cases.append(
-                {
-                    "id": grep_num("^#(.+):.*$", text, "num"),
-                    "facility": grep(": Employee from (.+) facility", text, "facility"),
-                    "dept": grep("Dept. (\w+),", text, "dept"),
-                    "bldg": grep("Bldg. (.+),", text, "bldg"),
-                    "post_day": post_day,
-                    "last_day": grep_date("last day of work on {} and tested", text, "last_day", post_day.year),
-                    "test_day": grep_date("tested on {}\.?", text, "test_day", post_day.year),
-                }
-            )
+            cases.append(parse_case(text=text, post_day=post_day))
 
     return cases
 
