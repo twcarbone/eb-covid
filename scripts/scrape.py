@@ -137,6 +137,15 @@ def parse_html() -> list[dict]:
     return cases
 
 
+def parse_html2():
+    soup = get_soup()
+    cases = []
+    for text in re.findall("#.*", soup.get_text()):
+        # TODO: Posted date is garbage using this method
+        cases.append(parse_case(text=text, post_day=dt.date(1900, 1, 1)))
+    return cases
+
+
 def main():
     args = parse_args()
     logging_setup(args.verbosity)
