@@ -90,7 +90,7 @@ def get_soup():
     return soup
 
 
-def parse_html(args) -> list[dict]:
+def parse_html() -> list[dict]:
     """
     Parse HTML from https://eblanding.com/covid-19-case-report-summary/.
 
@@ -140,7 +140,7 @@ def parse_html(args) -> list[dict]:
 def main():
     args = parse_args()
     logging_setup(args.verbosity)
-    return parse_html(args)
+    return parse_html()
 
 
 if __name__ == "__main__":
