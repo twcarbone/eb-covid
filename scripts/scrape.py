@@ -1,5 +1,6 @@
 import argparse
 import datetime as dt
+import logging
 import re
 
 import bs4
@@ -10,14 +11,35 @@ URL = "https://eblanding.com/covid-19-case-report-summary/"
 
 def parse_args():
     parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-v",
+        "--verbosity",
+        help="Set logging verbosity X (0, 1, 2)",
+        metavar="X",
+        type=int,
+        dest="verbosity",
+        default=1,
+    )
 
     return parser.parse_args()
 
 
+def logging_setup(verbosity):
+    mapping = {0: logging.FATAL, 1: logging.INFO, 2: logging.DEBUG}
+    logging.getLogger(__name__)
+    logging.basicConfig(
+        format="[%(asctime)s - %(levelname)s] %(message)s",
+        # datefmt="%d/%b/%Y %H:%M:%S",
+        datefmt="%c",
+        level=mapping.get(verbosity, logging.INFO),
+        force=True,
+    )
+
+
 def grep(regex, s, item):
     m = re.search(regex, s)
-    if m is not None:
-        Warning(f"Failed to resolve {item} from '{s[:20]}...'")
+    if m is None:
+        logging.warning(f"Failed to resolve {item} from '{s[:20]}...'")
         return None
     else:
         return m.group(1)
@@ -63,9 +85,10 @@ def parse_html(args) -> list[dict]:
     }
     ```
     """
-
+    logging.info("Getting HTML...")
     page = requests.get(url="https://eblanding.com/covid-19-case-report-summary/")
     soup = bs4.BeautifulSoup(page.content, "html.parser")
+    logging.info("Done.")
 
     cases = []
 
@@ -76,9 +99,12 @@ def parse_html(args) -> list[dict]:
 
     for item in pre + p:
         post_day = dt.datetime.strptime(item.get_text()[10:-1], "%B %d, %Y").date()
+        logging.info(f"Getting cases for {post_day.strftime('%B %d, %Y')}...")
 
         # Each case reported on the given day is contained in an <li> tag
         for li in item.next_sibling.next_sibling.find_all("li"):
+            logging.debug(li)
+
             # <h3> of the <li> contains the entire case text
             text = li.find("h3").get_text()
 
@@ -99,8 +125,9 @@ def parse_html(args) -> list[dict]:
 
 def main():
     args = parse_args()
-    cases = parse_html(args)
+    logging_setup(args.verbosity)
+    return parse_html(args)
 
 
 if __name__ == "__main__":
-    main()
+    cases = main()
