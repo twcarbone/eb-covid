@@ -38,25 +38,28 @@ def logging_setup(level):
 def grep(regex, s, item):
     m = re.search(regex, s)
     if m is None:
-        logging.warning(f"Failed to resolve {item} from '{s[:20]}...'")
+        logging.warning(f"Failed to resolve {item} from '{s}'")
         return None
     else:
         return m.group(1)
 
 
 def grep_date(regex, s, item, year) -> dt.date:
-    date = grep(regex, s, item)
-    if date is None:
+    """ """
+    # Regex for date. Matches 'Janaury 21, 1990', 'January 21 ,1990', 'Janaury 21'. Named
+    # capture groups are: month=Janaury, day=21, and year=1990.
+    date_regex = "(?P<month>[a-zA-Z]+) (?P<day>\d{1,2})(?:.{1,2}(?P<year>\d{4}))?"
+    m = re.search(regex.format(date_regex), s)
+    if m is None:
+        logging.warning(f"Failed to resolve {item} from '{s}'")
         return None
+    
+    groupdict = m.groupdict()
+    month = groupdict.get("month")
+    day = groupdict.get("day")
+    year = groupdict.get("year") or year
 
-    try:
-        dt_obj = dt.datetime.strptime(date, "%B %d %Y")
-    except ValueError:
-        # Cases posted earlier than January 3, 2022 did not report the year in the case
-        # text; only the month and day was posted. Need to assign year explicitly.
-        dt_obj = dt.datetime.strptime(date, "%B %d").replace(year=year)
-
-    return dt_obj.date()
+    return dt.datetime.strptime(f"{month} {day} {year}", "%B %d %Y").date()
 
 
 def grep_num(regex, s, item) -> int:
@@ -97,25 +100,31 @@ def parse_html(args) -> list[dict]:
     p = soup.find("article").find("div").find_all("p")
 
     for item in pre + p:
-        post_day = dt.datetime.strptime(item.get_text()[10:-1], "%B %d, %Y").date()
-        logging.info(f"Getting cases for {post_day.strftime('%B %d, %Y')}...")
+        post_day = grep_date("Posted on {}:?", item.get_text(), "post_day", 1990)
+        logging.info(f"Getting cases for {post_day}...")
 
         # Each case reported on the given day is contained in an <li> tag
         for li in item.next_sibling.next_sibling.find_all("li"):
             logging.debug(li)
 
             # <h3> of the <li> contains the entire case text
-            text = li.find("h3").get_text()
+            h3 = li.find("h3")
+
+            if h3 is not None:
+                text = h3.get_text()
+            else:
+                logging.warning(f"No case data for '{li.get_text()}'")
+                continue
 
             cases.append(
                 {
                     "id": grep_num("^#(.+):.*$", text, "num"),
                     "facility": grep(": Employee from (.+) facility", text, "facility"),
-                    "dept": grep("Dept. (+\w),", text, "dept"),
+                    "dept": grep("Dept. (\w+),", text, "dept"),
                     "bldg": grep("Bldg. (.+),", text, "bldg"),
                     "post_day": post_day,
-                    "last_day": grep_date("last day of work on (.+) and tested", text, "last_day", post_day.year),
-                    "test_day": grep_date("tested on (.+).*$", text, "test_day", post_day.year),
+                    "last_day": grep_date("last day of work on {} and tested", text, "last_day", post_day.year),
+                    "test_day": grep_date("tested on {}\.?", text, "test_day", post_day.year),
                 }
             )
 
