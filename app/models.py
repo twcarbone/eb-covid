@@ -4,6 +4,9 @@ import sqlalchemy.ext.declarative as sa_ext_decl
 import sqlalchemy.orm as sa_orm
 from config import Config
 
+SHORT_STR = 100
+LONG_STR = 500
+
 convention = {
     "ix": "ix_%(column_0_label)s",
     "uq": "uq_%(table_name)s_%(column_0_name)s",
@@ -49,7 +52,7 @@ class IDNameMixin(IDMixin):
      * name
     """
 
-    name = sa.Column(sa.String(Config.DB_SHRT_STRING), nullable=False)
+    name = sa.Column(sa.String(SHORT_STR), nullable=False)
 
 
 @sa_orm.declarative_mixin
@@ -66,10 +69,10 @@ class User(DeclBase, IDMixin, CreatedOnMixin):
     # Table args
 
     # Columns
-    firstname = sa.Column(sa.String(Config.DB_SHRT_STRING), nullable=False)
-    middlename = sa.Column(sa.String(Config.DB_SHRT_STRING))
-    lastname = sa.Column(sa.String(Config.DB_SHRT_STRING), nullable=False)
-    email = sa.Column(sa.String(Config.DB_SHRT_STRING), nullable=False, unique=True)
+    firstname = sa.Column(sa.String(SHORT_STR), nullable=False)
+    middlename = sa.Column(sa.String(SHORT_STR))
+    lastname = sa.Column(sa.String(SHORT_STR), nullable=False)
+    email = sa.Column(sa.String(SHORT_STR), nullable=False, unique=True)
 
     # Relationships
     _password = sa_orm.relationship("Password", back_populates="_user", uselist=False, cascade="all, delete-orphan")
