@@ -18,18 +18,21 @@ convention = {
 metadata_obj = sa.MetaData(naming_convention=convention)
 
 
-def _create_engine(server, database, **kwargs):
-    return sa.create_engine(...)
-
-
 class Base:
     @sa_orm.declared_attr
     def __tablename__(cls):
         return cls.__name__
 
 
-Engine = _create_engine(server="foo", database="bar")
-Session = sa_orm.sessionmaker(bind=Engine)
+Engine_dev = sa.create_engine(url=Config.DB_URI_DEV, pool_pre_ping=True)
+Session_dev = sa_orm.sessionmaker(bind=Engine_dev)
+
+Engine_test = sa.create_engine(url=Config.DB_URI_TEST, pool_pre_ping=True)
+Session_test = sa_orm.sessionmaker(bind=Engine_dev)
+
+Engine_prod = sa.create_engine(url=Config.DB_URI_PROD, pool_pre_ping=True)
+Session_prod = sa_orm.sessionmaker(bind=Engine_dev)
+
 Metadata = sa.MetaData(naming_convention=convention)
 DeclBase = sa_ext_decl.declarative_base(cls=Base, metadata=Metadata)
 
@@ -83,7 +86,7 @@ class Password(DeclBase):
     # Table args
 
     # Columns
-    user_id = sa.Column(sa.Integer(), sa.ForeignKey("User.id"), nullable=False)
+    user_id = sa.Column(sa.Integer(), sa.ForeignKey("User.id"), primary_key=True, nullable=False)
     hash = sa.Column(sa.String(128), nullable=False)
     salt = sa.Column(sa.String(5), nullable=False)
 
@@ -95,7 +98,7 @@ class APIToken(DeclBase, CreatedOnMixin):
     # Table args
 
     # Columns
-    user_id = sa.Column(sa.Integer(), sa.ForeignKey("User.id"), nullable=False)
+    user_id = sa.Column(sa.Integer(), sa.ForeignKey("User.id"), primary_key=True, nullable=False)
     token = sa.Column(sa.String(32), nullable=False)
     expiration = sa.Column(sa.DateTime(), nullable=False)
 
