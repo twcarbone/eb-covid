@@ -6,6 +6,8 @@ import re
 import bs4
 import requests
 
+import app.models as db
+
 URL = "https://eblanding.com/covid-19-case-report-summary/"
 
 
@@ -20,8 +22,21 @@ def parse_args():
         dest="verbosity",
         default=20,
     )
+    parser.add_argument(
+        "--dbenv",
+        help="Insert records to database environment X (dev, test, prod)",
+        metavar="X",
+        type=str,
+        dest="dbenv",
+        default=None,
+    )
 
-    return parser.parse_args()
+    args = parser.parse_args()
+
+    if args.dbenv is not None and args.dbenv not in ["dev", "test", "prod"]:
+        parser.error("--dbenv must be 'dev', 'test', or 'prod'")
+
+    return args
 
 
 def logging_setup(level):
@@ -148,10 +163,24 @@ def parse_html2():
     return cases
 
 
+def to_db(cases: list, dbenv: str):
+    """
+    Add cases from *cases* to database denoted by environment *dbenv* (dev, test, prod).
+    """
+    with db.ssn_from_dbenv(dbenv=dbenv) as ssn:
+        for case in cases:
+            facility = db.Facility(name=case["facility"])
+            ssn.add(facility)
+            ssn.flush()
+
+
 def main():
     args = parse_args()
     logging_setup(args.verbosity)
-    return parse_html()
+    cases = parse_html()
+    if args.dbenv is not None:
+        to_db(cases, args.dbenv)
+    return cases
 
 
 if __name__ == "__main__":
