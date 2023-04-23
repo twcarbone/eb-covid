@@ -37,6 +37,16 @@ Metadata = sa.MetaData(naming_convention=convention)
 DeclBase = sa_ext_decl.declarative_base(cls=Base, metadata=Metadata)
 
 
+_dbenv_session_map = {"dev": Session_dev, "test": Session_test, "prod": Session_prod}
+
+
+def ssn_from_dbenv(dbenv: str) -> sa_orm.Session:
+    """
+    Return an open `Session` based on *dbenv* (dev, test, prod).
+    """
+    return _dbenv_session_map.get(dbenv, Session_dev)()
+
+
 @sa_orm.declarative_mixin
 class IDMixin:
     """
@@ -66,6 +76,10 @@ class CreatedOnMixin:
     """
 
     createdon = sa.Column(sa.DateTime(), server_default=sa.func.now())
+
+
+#
+#
 
 
 class User(DeclBase, IDMixin, CreatedOnMixin):
@@ -104,6 +118,10 @@ class APIToken(DeclBase, CreatedOnMixin):
 
     # Relationships
     _user = sa_orm.relationship("User", back_populates="_apitoken")
+
+
+#
+#
 
 
 class Facility(DeclBase, IDNameMixin):
