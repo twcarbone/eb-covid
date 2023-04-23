@@ -163,6 +163,15 @@ def parse_html2():
     return cases
 
 
+def distinct(cases: list[dict], key: str) -> None:
+    """
+    Return a sorted list of distinct values of *key*. Discards `None` if it is a value.
+    """
+    set_ = {case[key] for case in cases}
+    set_.discard(None)
+    return sorted(list(set_))
+
+
 def to_db(cases: list, dbenv: str):
     """
     Add cases from *cases* to database denoted by environment *dbenv* (dev, test, prod).
