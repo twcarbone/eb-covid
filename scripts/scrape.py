@@ -74,12 +74,12 @@ def grep_num(regex, s, item) -> int:
 
 def parse_case(text, post_day):
     return {
-        "id": grep_num("^#(.+):.*$", text, "num"),
-        "facility": grep(": Employee from (.+) facility", text, "facility"),
-        "dept": grep("Dept. (\w+),", text, "dept"),
+        "id": grep_num("#\s*([\d,]+).*:.*$", text, "num"),
+        "facility": grep(":\s*Employee from (.+),", text, "facility"),
+        "dept": grep("Dept.\s*([\d/]+)", text, "dept"),
         "bldg": grep("Bldg. (.+),", text, "bldg"),
         "post_day": post_day,
-        "last_day": grep_date("last day of work on {} and tested", text, "last_day", post_day.year),
+        "last_day": grep_date("last day of work on {}", text, "last_day", post_day.year),
         "test_day": grep_date("tested on {}\.?", text, "test_day", post_day.year),
     }
 
