@@ -187,6 +187,7 @@ def main():
     args = parse_args()
     logging_setup(args.verbosity)
     cases = parse_html()
+    # TODO: Coerce facilities to proper format
     if args.dbenv is not None:
         to_db(cases, args.dbenv)
     return cases
