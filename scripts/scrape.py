@@ -90,7 +90,7 @@ def grep_num(regex, s, item) -> int:
 def parse_case(text, post_day):
     return {
         "id": grep_num("#\s*([\d,]+).*:.*$", text, "num"),
-        "facility": grep(":\s*Employee from (.+),", text, "facility"),
+        "facility": grep(":\s*Employee from ([\w\s'()]+)", text, "facility"),
         "dept": grep("Dept.\s*([\d/]+)", text, "dept"),
         "bldg": grep("Bldg. (.+),", text, "bldg"),
         "post_day": post_day,
