@@ -32,6 +32,8 @@ def logging_setup(level):
         datefmt="%c",
         level=level,
         force=True,
+        filename="./logs/scrape.log",
+        filemode="w",
     )
 
 
