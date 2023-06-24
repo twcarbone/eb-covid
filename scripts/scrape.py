@@ -76,6 +76,18 @@ def grep_num(regex, s, item) -> int:
     return int(num.replace(",", ""))
 
 
+def sanitize(text: str) -> str:
+    """
+    Return sanitized *text*.
+
+    Replaces:
+     * U+00a0 (Non-Breaking Space) -> `' '`
+     * U+2018 (Left Single Quotation Mark) -> `'`
+     * U+2019 (Right Single Quotation Mark) -> `'`
+    """
+    return text.replace("\u00a0", " ").replace("\u2018", "'").replace("\u2019", "'")
+
+
 def parse_case(text, post_day):
     return {
         "id": grep_num("#\s*([\d,]+).*:.*$", text, "num"),
@@ -133,7 +145,7 @@ def parse_html() -> list[dict]:
             h3 = li.find("h3")
 
             if h3 is not None:
-                text = h3.get_text()
+                text = sanitize(h3.get_text())
             else:
                 logger.warning(f"No case data for '{li.get_text()}'")
                 continue
