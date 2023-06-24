@@ -1,8 +1,14 @@
+import typing as typ
+
+import log
 import sqlalchemy as sa
 import sqlalchemy.exc as sa_exc
 import sqlalchemy.ext.declarative as sa_ext_decl
+import sqlalchemy.inspection as sa_inspect
 import sqlalchemy.orm as sa_orm
 from config import Config
+
+logger = log.logging.getLogger("EBCovid.models")
 
 SHORT_STR = 100
 LONG_STR = 500
@@ -22,6 +28,39 @@ class BaseModel:
     @sa_orm.declared_attr
     def __tablename__(cls):
         return cls.__name__
+
+    @classmethod
+    def one_or_create(cls: "BaseModel", ssn: sa_orm.Session, **kwargs) -> "BaseModel":
+        """
+        Query for *cls* by *kwargs*, returning the single matching row. If none are found,
+        create and return the row.
+        """
+        row = ssn.query(cls).filter_by(**kwargs).one_or_none()
+        if row is None:
+            row = cls(**kwargs)
+            ssn.add(row)
+            ssn.flush()
+            logger.info(f"Created {row}")
+        else:
+            logger.info(f"Found {row}")
+        return row
+
+    @classmethod
+    def pk_column_name(cls: "BaseModel") -> str:
+        """
+        Return the primary key column name of *cls*.
+        """
+        return sa_inspect.inspect(cls).primary_key[0].name
+
+    def __repr__(self: "BaseModel") -> str:
+        """
+        E.x. `<TableName id=1, column='something', anothercolumn='something else'>`
+        """
+        classname: str = type(self).__name__
+        columns: list[str] = self.__table__.columns.keys()
+        columns.insert(0, columns.pop(columns.index(type(self).pk_column_name())))  # Primary key appears first
+        column_kvs: str = ", ".join([f"{c}={getattr(self, c)!r}" for c in columns])
+        return f"<{classname} {column_kvs}>"
 
 
 Engine_dev = sa.create_engine(url=Config.DB_URI_DEV, pool_pre_ping=True)
