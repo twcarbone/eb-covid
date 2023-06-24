@@ -18,7 +18,7 @@ convention = {
 metadata_obj = sa.MetaData(naming_convention=convention)
 
 
-class Base:
+class BaseModel:
     @sa_orm.declared_attr
     def __tablename__(cls):
         return cls.__name__
@@ -34,7 +34,7 @@ Engine_prod = sa.create_engine(url=Config.DB_URI_PROD, pool_pre_ping=True)
 Session_prod = sa_orm.sessionmaker(bind=Engine_dev)
 
 Metadata = sa.MetaData(naming_convention=convention)
-DeclBase = sa_ext_decl.declarative_base(cls=Base, metadata=Metadata)
+DeclBase = sa_ext_decl.declarative_base(cls=BaseModel, metadata=Metadata)
 
 
 _dbenv_session_map = {"dev": Session_dev, "test": Session_test, "prod": Session_prod}
