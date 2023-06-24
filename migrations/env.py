@@ -4,9 +4,10 @@ from logging.config import fileConfig
 
 import sqlalchemy as sa
 from alembic import context
-from config import Config
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
+
+from config import Config
 
 USE_TWOPHASE = False
 

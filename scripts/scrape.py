@@ -3,10 +3,10 @@ import datetime as dt
 import re
 
 import bs4
-import log
 import requests
 
 import app.models as db
+import log
 
 logger = log.logging.getLogger("EBCovid.scrape")
 

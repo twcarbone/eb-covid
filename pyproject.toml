@@ -4,3 +4,4 @@ line-length = 120
 [tool.isort]
 src_paths = ["app", "migrations", "scripts", "tests"]
 force_single_line = true
+known_first_party = ["config", "log"]  # isort struggles with toplevel modules

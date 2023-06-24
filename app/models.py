@@ -1,11 +1,12 @@
 import typing as typ
 
-import log
 import sqlalchemy as sa
 import sqlalchemy.exc as sa_exc
 import sqlalchemy.ext.declarative as sa_ext_decl
 import sqlalchemy.inspection as sa_inspect
 import sqlalchemy.orm as sa_orm
+
+import log
 from config import Config
 
 logger = log.logging.getLogger("EBCovid.models")
