@@ -1,12 +1,14 @@
 import argparse
 import datetime as dt
-import logging
 import re
 
 import bs4
+import log
 import requests
 
 import app.models as db
+
+logger = log.logging.getLogger("EBCovid.scrape")
 
 URL = "https://eblanding.com/covid-19-case-report-summary/"
 
@@ -39,23 +41,10 @@ def parse_args():
     return args
 
 
-def logging_setup(level):
-    logging.getLogger(__name__)
-    logging.basicConfig(
-        format="[%(asctime)s - %(levelname)s] %(message)s",
-        # datefmt="%d/%b/%Y %H:%M:%S",
-        datefmt="%c",
-        level=level,
-        force=True,
-        filename="./logs/scrape.log",
-        filemode="w",
-    )
-
-
 def grep(regex, s, item):
     m = re.search(regex, s)
     if m is None:
-        logging.warning(f"Failed to resolve {item} from '{s}'")
+        logger.warning(f"Failed to resolve {item} from '{s}'")
         return None
     else:
         return m.group(1)
@@ -68,7 +57,7 @@ def grep_date(regex, s, item, year) -> dt.date:
     date_regex = "(?P<month>[a-zA-Z]+) (?P<day>\d{1,2})(?:.{1,2}(?P<year>\d{4}))?"
     m = re.search(regex.format(date_regex), s)
     if m is None:
-        logging.warning(f"Failed to resolve {item} from '{s}'")
+        logger.warning(f"Failed to resolve {item} from '{s}'")
         return None
 
     groupdict = m.groupdict()
@@ -100,10 +89,10 @@ def parse_case(text, post_day):
 
 
 def get_soup():
-    logging.info("Getting HTML...")
+    logger.info("Getting HTML...")
     page = requests.get(url="https://eblanding.com/covid-19-case-report-summary/")
     soup = bs4.BeautifulSoup(page.content, "html.parser")
-    logging.info("Done.")
+    logger.info("Done.")
     return soup
 
 
@@ -134,11 +123,11 @@ def parse_html() -> list[dict]:
 
     for item in pre + p:
         post_day = grep_date("Posted on {}:?", item.get_text(), "post_day", 1990)
-        logging.info(f"Getting cases for {post_day}...")
+        logger.info(f"Getting cases for {post_day}...")
 
         # Each case reported on the given day is contained in an <li> tag
         for li in item.next_sibling.next_sibling.find_all("li"):
-            logging.debug(li)
+            logger.debug(li)
 
             # <h3> of the <li> contains the entire case text
             h3 = li.find("h3")
@@ -146,7 +135,7 @@ def parse_html() -> list[dict]:
             if h3 is not None:
                 text = h3.get_text()
             else:
-                logging.warning(f"No case data for '{li.get_text()}'")
+                logger.warning(f"No case data for '{li.get_text()}'")
                 continue
 
             cases.append(parse_case(text=text, post_day=post_day))
@@ -185,7 +174,7 @@ def to_db(cases: list, dbenv: str):
 
 def main():
     args = parse_args()
-    logging_setup(args.verbosity)
+    logger.setLevel(args.verbosity)
     cases = parse_html()
     # TODO: Coerce facilities to proper format
     if args.dbenv is not None:
