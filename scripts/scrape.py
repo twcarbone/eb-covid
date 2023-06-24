@@ -44,7 +44,7 @@ def parse_args():
 def grep(regex, s, item):
     m = re.search(regex, s)
     if m is None:
-        logger.warning(f"Failed to resolve {item} from '{s}'")
+        logger.warning(f'Failed to resolve {item} from "{s}"')
         return None
     else:
         return m.group(1)
@@ -57,7 +57,7 @@ def grep_date(regex, s, item, year) -> dt.date:
     date_regex = "(?P<month>[a-zA-Z]+) (?P<day>\d{1,2})(?:.{1,2}(?P<year>\d{4}))?"
     m = re.search(regex.format(date_regex), s)
     if m is None:
-        logger.warning(f"Failed to resolve {item} from '{s}'")
+        logger.warning(f'Failed to resolve {item} from "{s}"')
         return None
 
     groupdict = m.groupdict()
