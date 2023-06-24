@@ -9,7 +9,8 @@ class Config(object):
     PG_PW = os.environ.get("PG_PW")
     PG_HOST_DEV = "192.168.4.68"
     PG_HOST_TEST = "192.168.4.68"
-    PG_HOST_PROD = "147.182.129.114"
+    # PG_HOST_PROD = "147.182.129.114"
+    PG_HOST_PROD = "192.168.4.68"
     PG_PORT = 5432
     PG_DB_DEV = "EBCovid_dev"
     PG_DB_TEST = "EBCovid_test"

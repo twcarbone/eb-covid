@@ -2,7 +2,9 @@ import logging
 import re
 from logging.config import fileConfig
 
+import sqlalchemy as sa
 from alembic import context
+from config import Config
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
@@ -37,11 +39,11 @@ target_metadata = {
     "prod": models.DeclBase.metadata,
 }
 
-
-# other values from the config, defined by the needs of env.py,
-# can be acquired:
-# my_important_option = config.get_main_option("my_important_option")
-# ... etc.
+urls = {
+    "dev": Config.DB_URI_DEV,
+    "test": Config.DB_URI_TEST,
+    "prod": Config.DB_URI_PROD,
+}
 
 
 def run_migrations_offline() -> None:
@@ -62,7 +64,7 @@ def run_migrations_offline() -> None:
     engines = {}
     for name in db_names:
         engines[name] = rec = {}
-        rec["url"] = context.config.get_section_option(name, "sqlalchemy.url")
+        rec["url"] = urls.get(name)
 
     for name, rec in engines.items():
         logger.info("Migrating database %s" % name)
@@ -94,11 +96,7 @@ def run_migrations_online() -> None:
     engines = {}
     for name in db_names:
         engines[name] = rec = {}
-        rec["engine"] = engine_from_config(
-            context.config.get_section(name, {}),
-            prefix="sqlalchemy.",
-            poolclass=pool.NullPool,
-        )
+        rec["engine"] = sa.create_engine(url=urls.get(name))
 
     for name, rec in engines.items():
         engine = rec["engine"]
