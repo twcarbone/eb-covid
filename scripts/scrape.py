@@ -1,6 +1,7 @@
 import argparse
 import datetime as dt
 import re
+import typing as typ
 
 import bs4
 import requests
@@ -173,15 +174,25 @@ def distinct(cases: list[dict], key: str) -> None:
     return sorted(list(set_))
 
 
-def to_db(cases: list, dbenv: str):
+def to_db(cases: list[dict[str, typ.Any]], dbenv: str):
     """
     Add cases from *cases* to database denoted by environment *dbenv* (dev, test, prod).
     """
     with db.ssn_from_dbenv(dbenv=dbenv) as ssn:
-        for case in cases:
-            facility = db.Facility(name=case["facility"])
-            ssn.add(facility)
-            ssn.flush()
+        for i, case in enumerate(cases, start=1):
+            logger.info(f"Committing data for case {case['id']} ({i} of {len(cases)})...")
+            facility = db.Facility.one_or_create(ssn=ssn, name=case["facility"])
+            dept = db.Department.one_or_create(ssn=ssn, name=case["dept"])
+            bldg = db.Building.one_or_create(ssn=ssn, name=case["bldg"])
+            db.CovidCase.one_or_create(
+                ssn=ssn,
+                facility_id=facility.id,
+                building_id=bldg.id,
+                department_id=dept.id,
+                last_work_date=case["last_day"],
+                test_date=case["test_day"],
+                post_date=case["post_day"],
+            )
 
 
 def main():
