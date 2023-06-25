@@ -22,16 +22,17 @@ convention = {
     "pk": "pk_%(table_name)s",
 }
 
-metadata_obj = sa.MetaData(naming_convention=convention)
+Metadata = sa.MetaData(naming_convention=convention)
 
 
-class BaseModel:
+@sa_ext_decl.as_declarative(metadata=Metadata)
+class DeclBase:
     @sa_orm.declared_attr
     def __tablename__(cls):
         return cls.__name__
 
     @classmethod
-    def one_or_create(cls: "BaseModel", ssn: sa_orm.Session, **kwargs) -> "BaseModel":
+    def one_or_create(cls: "DeclBase", ssn: sa_orm.Session, **kwargs) -> "DeclBase":
         """
         Query for *cls* by *kwargs*, returning the single matching row. If none are found,
         create and return the row.
@@ -47,13 +48,13 @@ class BaseModel:
         return row
 
     @classmethod
-    def pk_column_name(cls: "BaseModel") -> str:
+    def pk_column_name(cls: "DeclBase") -> str:
         """
         Return the primary key column name of *cls*.
         """
         return sa_inspect.inspect(cls).primary_key[0].name
 
-    def __repr__(self: "BaseModel") -> str:
+    def __repr__(self: "DeclBase") -> str:
         """
         E.x. `<TableName id=1, column='something', anothercolumn='something else'>`
         """
@@ -72,10 +73,6 @@ Session_test = sa_orm.sessionmaker(bind=Engine_dev)
 
 Engine_prod = sa.create_engine(url=Config.DB_URI_PROD, pool_pre_ping=True)
 Session_prod = sa_orm.sessionmaker(bind=Engine_dev)
-
-Metadata = sa.MetaData(naming_convention=convention)
-DeclBase = sa_ext_decl.declarative_base(cls=BaseModel, metadata=Metadata)
-
 
 _dbenv_session_map = {"dev": Session_dev, "test": Session_test, "prod": Session_prod}
 
