@@ -34,17 +34,22 @@ class DeclBase:
     @classmethod
     def one_or_create(cls: "DeclBase", ssn: sa_orm.Session, **kwargs) -> "DeclBase":
         """
-        Query for *cls* by *kwargs*, returning the single matching row. If none are found,
-        create and return the row.
+        Query for *cls* by *kwargs*. If a record is found, return the record. If no
+        records are found, attempts to commit a new record with *kwargs* and return the
+        new record. Records that violate any constraints are not committed.
         """
         row = ssn.query(cls).filter_by(**kwargs).one_or_none()
         if row is None:
             row = cls(**kwargs)
             ssn.add(row)
-            ssn.flush()
-            logger.info(f"Created {row}")
+            try:
+                ssn.commit()
+                logger.debug(f"Created {row}")
+            except sa_exc.SQLAlchemyError:
+                ssn.rollback()
+                logger.warning(f"Cannot commit {row}")
         else:
-            logger.info(f"Found {row}")
+            logger.debug(f"Found {row}")
         return row
 
     @classmethod
