@@ -19,6 +19,7 @@ fm = logging.Formatter(
 
 ch.setFormatter(fm)
 fh.setFormatter(fm)
+fh.setLevel(logging.DEBUG)
 
 logger.addHandler(ch)
 logger.addHandler(fh)
