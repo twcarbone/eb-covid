@@ -126,6 +126,7 @@ def parse_html() -> list[dict]:
     }
     ```
     """
+    logger.info("Parsing cases...")
     soup = get_soup()
     cases = []
 
@@ -136,23 +137,20 @@ def parse_html() -> list[dict]:
 
     for item in pre + p:
         post_day = grep_date("Posted on {}:?", item.get_text(), "post_day", 1990)
-        logger.info(f"Getting cases for {post_day}...")
+        logger.debug(f"Getting cases for {post_day}...")
 
         # Each case reported on the given day is contained in an <li> tag
         for li in item.next_sibling.next_sibling.find_all("li"):
-            logger.debug(li)
-
             # <h3> of the <li> contains the entire case text
             h3 = li.find("h3")
 
             if h3 is not None:
-                text = sanitize(h3.get_text())
+                logger.debug(text := h3.get_text())
+                cases.append(parse_case(text=sanitize(text), post_day=post_day))
             else:
                 logger.warning(f"No case data for '{li.get_text()}'")
-                continue
 
-            cases.append(parse_case(text=text, post_day=post_day))
-
+    logger.info("Done.")
     return cases
 
 
@@ -178,9 +176,10 @@ def to_db(cases: list[dict[str, typ.Any]], dbenv: str):
     """
     Add cases from *cases* to database denoted by environment *dbenv* (dev, test, prod).
     """
+    logger.info("Committing cases to database...")
     with db.ssn_from_dbenv(dbenv=dbenv) as ssn:
         for i, case in enumerate(cases, start=1):
-            logger.info(f"Committing data for case {case['id']} ({i} of {len(cases)})...")
+            logger.debug(f"Committing data for case {case['id']} ({i} of {len(cases)})...")
             facility = db.Facility.one_or_create(ssn=ssn, name=case["facility"])
             dept = db.Department.one_or_create(ssn=ssn, name=case["dept"])
             bldg = db.Building.one_or_create(ssn=ssn, name=case["bldg"])
@@ -193,11 +192,14 @@ def to_db(cases: list[dict[str, typ.Any]], dbenv: str):
                 test_date=case["test_day"],
                 post_date=case["post_day"],
             )
+    logger.info("Done.")
 
 
 def main():
     args = parse_args()
-    logger.setLevel(args.verbosity)
+
+    log.ch.setLevel(args.verbosity)
+
     cases = parse_html()
     # TODO: Coerce facilities to proper format
     if args.dbenv is not None:
