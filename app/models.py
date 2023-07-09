@@ -171,7 +171,7 @@ class Facility(DeclBase, IDNameMixin):
     __tableargs__ = sa.UniqueConstraint("name")
 
     # Relationships
-    _covidcase = sa_orm.relationship("CovidCase", back_populates="_facility")
+    _covidcases = sa_orm.relationship("CovidCase", back_populates="_facility")
 
 
 class Building(DeclBase, IDNameMixin):
@@ -179,7 +179,7 @@ class Building(DeclBase, IDNameMixin):
     __tableargs__ = sa.UniqueConstraint("name")
 
     # Relationships
-    _covidcase = sa_orm.relationship("CovidCase", back_populates="_building")
+    _covidcases = sa_orm.relationship("CovidCase", back_populates="_building")
 
 
 class Department(DeclBase, IDNameMixin):
@@ -187,7 +187,7 @@ class Department(DeclBase, IDNameMixin):
     __tableargs__ = sa.UniqueConstraint("name")
 
     # Relationships
-    _covidcase = sa_orm.relationship("CovidCase", back_populates="_department")
+    _covidcases = sa_orm.relationship("CovidCase", back_populates="_department")
 
 
 class CovidCase(DeclBase, IDMixin):
@@ -202,6 +202,6 @@ class CovidCase(DeclBase, IDMixin):
     post_date = sa.Column(sa.Date())
 
     # Relationships
-    _facility = sa_orm.relationship("Facility", back_populates="_covidcase")
-    _building = sa_orm.relationship("Building", back_populates="_covidcase")
-    _department = sa_orm.relationship("Department", back_populates="_covidcase")
+    _facility = sa_orm.relationship("Facility", back_populates="_covidcases")
+    _building = sa_orm.relationship("Building", back_populates="_covidcases")
+    _department = sa_orm.relationship("Department", back_populates="_covidcases")
